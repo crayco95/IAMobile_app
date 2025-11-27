@@ -25,10 +25,18 @@ export function ResultScreen({ route }: Props) {
         </View>
         {result.previewUri && <Image source={{ uri: result.previewUri }} style={styles.image} />}
         <View style={styles.box}>
-          <Text style={styles.row}>ID: {result.id}</Text>
-          <Text style={styles.row}>Label: {result.label}</Text>
-          <Text style={styles.row}>Confidence: {(result.confidence * 100).toFixed(1)}%</Text>
+          <Text style={styles.row}>Mensaje: {result.mensaje}</Text>
+          <Text style={styles.row}>Prediction: {result.clasificacion?.prediction}</Text>
+          <Text style={styles.row}>Score: {(result.clasificacion?.score * 100).toFixed(2)}%</Text>
+          <Text style={styles.row}>ClassIndex: {result.clasificacion?.extra?.classIndex}</Text>
+          <Text style={styles.row}>Tiempo: {result.clasificacion?.extra?.tiempoMs} ms</Text>
         </View>
+        {result.segmentacion?.segmentedImageBase64 && (
+          <View style={styles.segmentBox}>
+            <Text style={styles.segmentTitle}>Segmentación</Text>
+            <Image source={{ uri: `data:image/png;base64,${result.segmentacion.segmentedImageBase64}` }} style={styles.image} />
+          </View>
+        )}
         <View style={styles.footer}><Text style={styles.footerText}>v0.1.0</Text></View>
       </BlurView>
     </LinearGradient>
@@ -41,6 +49,8 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   title: { fontSize: 22, fontWeight: '800', marginBottom: 12, color: '#0f172a', textAlign: 'center' },
   image: { width: '100%', height: 280, borderRadius: 12 },
+  segmentBox: { marginTop: 16, alignItems: 'center', width: '100%' },
+  segmentTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 8 },
   box: { marginTop: 16, padding: 12, borderRadius: 8, backgroundColor: '#f1f5f9', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, alignItems: 'center' },
   row: { marginBottom: 6, textAlign: 'center' }
   ,footer: { marginTop: 12, alignItems: 'center' }

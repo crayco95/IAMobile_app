@@ -32,5 +32,24 @@ export async function uploadImageBase64(base64: string, mime: string = 'image/jp
   })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const data = await res.json()
-  return { id: data.id ?? 'unknown', label: data.label, confidence: data.confidence, previewUri: `data:${mime};base64,${base64}` }
+  return {
+    exitoso: !!data.exitoso,
+    mensaje: data.mensaje ?? '',
+    clasificacion: {
+      prediction: data?.clasificacion?.prediction ?? '',
+      score: Number(data?.clasificacion?.score ?? 0),
+      extra: {
+        classIndex: Number(data?.clasificacion?.extra?.classIndex ?? 0),
+        rawOutput: Array.isArray(data?.clasificacion?.extra?.rawOutput) ? data.clasificacion.extra.rawOutput.map((n: any) => Number(n)) : [],
+        tiempoMs: Number(data?.clasificacion?.extra?.tiempoMs ?? 0)
+      }
+    },
+    segmentacion: {
+      error: data?.segmentacion?.error ?? null,
+      numMasks: Number(data?.segmentacion?.numMasks ?? 0),
+      segmentedImageBase64: String(data?.segmentacion?.segmentedImageBase64 ?? ''),
+      success: !!data?.segmentacion?.success
+    },
+    previewUri: `data:${mime};base64,${base64}`
+  }
 }
