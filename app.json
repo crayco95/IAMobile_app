@@ -13,7 +13,7 @@
       "**/*"
     ],
     "extra": {
-      "API_BASE_URL": "",
+      "API_BASE_URL": "https://6kt40sp2-8080.use2.devtunnels.ms/api/v1/imagen",
       "IMAGE_MAX_MB": 5
     },
     "plugins": [

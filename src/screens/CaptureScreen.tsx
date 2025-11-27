@@ -98,6 +98,19 @@ export function CaptureScreen({ navigation }: Props) {
       setImageBase64(b64)
       setImageMime(mime)
       setPreviewDataUri(outUri ?? `data:${mime};base64,${b64}`)
+      // Debug logs for library picker
+      try {
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📸 Image selected from library')
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📸 imageUri:', uri)
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📸 previewDataUri set to:', outUri ?? 'data URI')
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📸 base64 length:', b64.length)
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📸 mime:', mime)
+      } catch {}
     } else {
       const m = await ImageManipulator.manipulateAsync(uri, [], { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG, base64: true })
       const b64 = m.base64 || ''
@@ -105,6 +118,17 @@ export function CaptureScreen({ navigation }: Props) {
       setImageMime('image/jpeg')
       setPreviewDataUri(isWeb ? `data:image/jpeg;base64,${b64}` : m.uri)
       setImageSize(b64 ? base64ByteLength(b64) : size)
+      // Debug logs for library picker (manipulated)
+      try {
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📸 Image manipulated and selected from library')
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📸 manipulated uri:', m.uri)
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📸 previewDataUri set to:', isWeb ? 'data URI' : m.uri)
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📸 base64 length:', b64.length)
+      } catch {}
     }
   }
 
@@ -162,6 +186,19 @@ export function CaptureScreen({ navigation }: Props) {
       setImageBase64(b64)
       setImageMime(mime)
       setPreviewDataUri(outUri ?? `data:${mime};base64,${b64}`)
+      // Debug logs for camera
+      try {
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📷 Photo taken with camera')
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📷 imageUri:', uri)
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📷 previewDataUri set to:', outUri ?? 'data URI')
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📷 base64 length:', b64.length)
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📷 mime:', mime)
+      } catch {}
     } else {
       const m = await ImageManipulator.manipulateAsync(uri, [], { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG, base64: true })
       const b64 = m.base64 || ''
@@ -169,6 +206,17 @@ export function CaptureScreen({ navigation }: Props) {
       setImageMime('image/jpeg')
       setPreviewDataUri(isWeb ? `data:image/jpeg;base64,${b64}` : m.uri)
       setImageSize(b64 ? base64ByteLength(b64) : size)
+      // Debug logs for camera (manipulated)
+      try {
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📷 Photo taken and manipulated')
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📷 manipulated uri:', m.uri)
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📷 previewDataUri set to:', isWeb ? 'data URI' : m.uri)
+        // eslint-disable-next-line no-console
+        console.log('[CaptureScreen] 📷 base64 length:', b64.length)
+      } catch {}
     }
   }
 
@@ -183,9 +231,19 @@ export function CaptureScreen({ navigation }: Props) {
     }
     try {
       const baseUrl = getApiBaseUrl()
+      // Log para depuración: qué URL y tamaño de base64 se va a enviar
+      try {
+        // eslint-disable-next-line no-console
+        console.log('[ui] upload triggered, baseUrl=', baseUrl, 'base64 length=', imageBase64?.length)
+      } catch {}
       const r = await run(() => baseUrl ? uploadServiceBase64(imageBase64, imageMime || 'image/jpeg') : mockUploadBase64(imageBase64, imageMime))
       navigation.navigate('Result', { result: r })
-    } catch {}
+    } catch (e) {
+      // Mostrar error en la UI para no silenciar fallos
+      // eslint-disable-next-line no-console
+      console.error('Upload failed', e)
+      setUiError(e instanceof Error ? e.message : String(e))
+    }
   }
 
   return (
@@ -203,7 +261,24 @@ export function CaptureScreen({ navigation }: Props) {
         )}
         {(previewDataUri || imageUri) && (
           <View style={styles.preview}>
-            <Image key={(previewDataUri ?? imageUri) ?? 'none'} source={{ uri: (previewDataUri ?? imageUri)! }} style={styles.image} />
+            <Image 
+              key={(previewDataUri ?? imageUri) ?? 'none'} 
+              source={{ uri: (previewDataUri ?? imageUri)! }} 
+              style={styles.image}
+              resizeMode="contain"
+              onError={(e) => {
+                // eslint-disable-next-line no-console
+                console.error('[CaptureScreen] ❌ Error loading preview image:', e.nativeEvent.error)
+                setUiError('Error loading image preview')
+              }}
+              onLoad={() => {
+                // eslint-disable-next-line no-console
+                console.log('[CaptureScreen] ✅ Preview image loaded successfully')
+              }}
+            />
+            {!previewDataUri && !imageUri && (
+              <Text style={{ color: '#64748b', marginTop: 8 }}>Loading image...</Text>
+            )}
             <View style={styles.actionsBelow}>
                <Pressable style={({ pressed }) => [styles.secondary, pressed && styles.pressedSecondary]} onPress={clearSelected}><Text style={styles.secondaryText}>Change Image</Text></Pressable>
                <Pressable style={({ pressed }) => [styles.button, pressed && styles.pressed]} onPress={upload}><Text style={styles.buttonText}>Upload</Text></Pressable>
@@ -236,8 +311,15 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontWeight: '600' },
   secondary: { borderWidth: 1, borderColor: '#7f1d1d', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 8 },
   secondaryText: { color: '#7f1d1d', fontWeight: '600' },
-  preview: { marginTop: 16, alignItems: 'center' },
-  image: { width: '100%', height: 280, borderRadius: 12 },
+  preview: { marginTop: 16, alignItems: 'center', width: '100%' },
+  image: { 
+    width: '100%', 
+    height: 280, 
+    borderRadius: 12, 
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#e5e7eb'
+  },
   status: { marginTop: 16 },
   error: { color: '#ef4444' }
   ,pressed: { transform: [{ scale: 0.98 }], opacity: 0.95, backgroundColor: '#641515' }
